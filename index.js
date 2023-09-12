@@ -5,6 +5,7 @@ require('dotenv').config();
 const token = process.env.TOKEN;
 const channelbuy = process.env.channelbuy;
 const channelsell = process.env.channelsell;
+const channellastsales = process.env.channellastsales;
 const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({
   intents: [
@@ -104,10 +105,57 @@ app.get('/search', async (req, res) => {
   }
 });
 
+app.get('/lastsales', async (req, res) => {
+  let counter=0;
+  try {
+    const channelId = channellastsales; // Replace with the ID of your channel
+    let beforeMessageId = null;
+    const channel = await client.channels.fetch(channelId);
+    if (!beforeMessageId) {
+      const latestMessage = await channel.messages.fetch({ limit: 10});
+      beforeMessageId = latestMessage.first().id;
+    }
+    let messages = await channel.messages.fetch({ before: beforeMessageId });
+    const messageArray = Array.from(messages.values());
+    const results = messageArray.slice(0, 20).map((message) => {
+      let price = "";
+      let specific = "";
+      let quantity = "";
+      let messageLink = "";
+      let embed = ""
+      
+      embed = message.embeds[0];
+      console.log(embed);
+      const item = embed.data.title.split(',')[0].replace(/<.*>/g, '').trim();
+      let items = item;
+      counter = counter+1;
+      console.log(items);
+       price = embed.fields[0].value;
+      console.log(price);
+      console.log(counter);
+       specific = embed.fields[1].value;
+       quantity = embed.fields[2].value;
+       messageLink = `https://discord.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`;
+        return {
+          item,
+          price,
+          specific,
+          quantity,
+          messageLink,
+      };
+    });
+    return res.json({ results });
+  } catch (err) {
+    console.error(`Error: ${err}`);
+    return res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+
 client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
-  app.listen(3000, () => {
-    console.log('API server listening on port 3000');
+  app.listen(8080, () => {
+    console.log('API server listening on port 8080');
   });
 });
 
