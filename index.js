@@ -117,7 +117,7 @@ app.get('/lastsales', async (req, res) => {
     }
     let messages = await channel.messages.fetch({ before: beforeMessageId });
     const messageArray = Array.from(messages.values());
-    const results = messageArray.slice(0, 20).map((message) => {
+    const results = messageArray.slice(0, 12).map((message) => {
       let price = "";
       let specific = "";
       let quantity = "";
